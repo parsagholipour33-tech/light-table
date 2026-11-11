@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1566d6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="میز نور">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>میز نور برای طراحی از روی الگو</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--panel:#fff;--ink:#1b2430;--mute:#596778;--line:#d2d9e0;--acc:#1566d6;--accink:#fff;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161b;--panel:#1b2129;--ink:#e8edf2;--mute:#9aa7b4;--line:#2d3641;--acc:#5aa2ff;--accink:#08121f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161b;--panel:#1b2129;--ink:#e8edf2;--mute:#9aa7b4;--line:#2d3641;--acc:#5aa2ff;--accink:#08121f;color-scheme:dark}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:400 15px/1.5 Vazirmatn,system-ui,Tahoma,sans-serif}
+#stage{flex:1;min-height:0;position:relative;background:#fff}
+#c{width:100%;height:100%;display:block;touch-action:none}
+#hint{position:absolute;inset:auto 0 0 0;padding:.45rem .9rem;background:rgba(15,19,24,.78);color:#fff;font-size:14px;pointer-events:none}
+#show{position:absolute;top:.6rem;inset-inline-start:.6rem;display:none;opacity:.85}
+#panel{max-height:46%;overflow:auto;background:var(--panel);border-top:1px solid var(--line);padding:.7rem .9rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.7rem .9rem}
+#panel[hidden]{display:none}
+.g{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.g>span{color:var(--mute);font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:.4rem}.row>*{flex:1 1 auto}
+button,select,.file{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;min-height:40px;padding:.35rem .7rem;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,.file:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+button.p{background:var(--acc);border-color:var(--acc);color:var(--accink);font-weight:600}
+select{width:100%}
+input[type=range]{width:100%;accent-color:var(--acc)}
+input[type=color]{width:100%;height:40px;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.file{display:flex;align-items:center;justify-content:center;text-align:center}.file input{display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="hint">عکس الگو رو انتخاب کن. بعد کاغذ نازک رو روی صفحه بذار و خطوط رو بکش.</div>
+  <button id="show">کنترل‌ها</button>
+</div>
+<div id="panel">
+  <div class="g"><span>الگو</span><label class="file p"><input id="img" type="file" accept="image/*">انتخاب عکس الگو</label></div>
+  <div class="g"><span>شبکه‌ی کمکی</span>
+    <select id="gr" aria-label="شبکه"><option value="0">بدون شبکه</option><option value="4">۴ خانه</option><option value="6">۶ خانه</option><option value="8">۸ خانه</option><option value="10">۱۰ خانه</option><option value="12">۱۲ خانه</option></select></div>
+  <div class="g"><span>تصویر کم‌رنگ</span><input id="fa" type="range" min="0" max="1" step=".01" value=".3"></div>
+  <div class="g"><span>غلظت خطوط</span><input id="li" type="range" min="0" max="1" step=".01" value="1"></div>
+  <div class="g"><span>حساسیت خطوط</span><input id="th" type="range" min="0" max=".8" step=".01" value=".12"></div>
+  <div class="g"><span>ضخامت خطوط</span><input id="tk" type="range" min="0" max="3" step="1" value="1"></div>
+  <div class="g"><span>رنگ خطوط</span><input id="co" type="color" value="#111111"></div>
+  <div class="g"><span>جای الگو</span>
+    <div class="row"><button id="ro">چرخش ۹۰°</button><button id="fit">تنظیم اولیه</button><button id="lk">قفل</button></div></div>
+  <div class="g"><span>نمایش</span>
+    <div class="row"><button id="fs">تمام‌صفحه</button><button id="hd">پنهان کردن کنترل‌ها</button></div></div>
+  <div class="g"><span>دوربین و عکس کاغذ</span><div class="row"><button id="lv">دوربین زنده</button><label class="file"><input id="ph" type="file" accept="image/*" capture="environment">عکس گرفتن از کاغذ</label><button id="nb">حذف پس‌زمینه</button></div></div>
+</div>
+<script>
+const $=i=>document.getElementById(i);
+const cv=$('c'),x=cv.getContext('2d'),hint=$('hint');
+const S={sc0:null,w:0,h:0,mag:null,tpl:document.createElement('canvas'),ln:document.createElement('canvas'),px:0,py:0,sc:1,rot:0,lock:0};
+const hex=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+
+function draw(){
+  const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  if(cv.width!==Math.round(W*d)||cv.height!==Math.round(H*d)){cv.width=Math.round(W*d);cv.height=Math.round(H*d)}
+  x.setTransform(d,0,0,d,0,0);x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  if(S.bg){const bw=S.bg.videoWidth||S.bg.naturalWidth||S.bg.width,bh=S.bg.videoHeight||S.bg.naturalHeight||S.bg.height;
+    if(bw&&bh){const k=Math.min(W/bw,H/bh);x.drawImage(S.bg,(W-bw*k)/2,(H-bh*k)/2,bw*k,bh*k)}}
+  if(!S.sc0)return;
+  const{w,h}=S;
+  x.save();x.translate(W/2+S.px,H/2+S.py);x.rotate(S.rot);x.scale(S.sc,S.sc);
+  x.drawImage(S.tpl,-w/2,-h/2);
+  const n=+$('gr').value;
+  if(n){const c=w/n;x.strokeStyle='rgba(220,40,60,.75)';x.lineWidth=1.5/S.sc;x.beginPath();
+    for(let i=0;i<=n;i++){x.moveTo(-w/2+i*c,-h/2);x.lineTo(-w/2+i*c,h/2)}
+    for(let y=0;y<=h+.01;y+=c){x.moveTo(-w/2,-h/2+y);x.lineTo(w/2,-h/2+y)}
+    x.stroke()}
+  x.restore();
+}
+function fit(){
+  if(!S.sc0)return;
+  S.px=S.py=0;S.rot=0;S.sc=Math.min(cv.clientWidth/S.w,cv.clientHeight/S.h)*.95;draw();
+}
+function build(){
+  if(!S.sc0)return;
+  const{w,h,mag}=S,t=+$('th').value,l=+$('li').value,f=+$('fa').value,k=+$('tk').value,[r,g,b]=hex($('co').value);
+  const o=new ImageData(w,h),od=o.data;
+  for(let i=0;i<w*h;i++){od[i*4]=r;od[i*4+1]=g;od[i*4+2]=b;od[i*4+3]=Math.max(0,Math.min(1,(mag[i]-t)/.12))*255}
+  S.ln.getContext('2d').putImageData(o,0,0);
+  const c=S.tpl.getContext('2d');c.clearRect(0,0,w,h);
+  c.globalAlpha=f;c.drawImage(S.sc0,0,0);c.globalAlpha=l;
+  for(let dx=-k;dx<=k;dx++)for(let dy=-k;dy<=k;dy++)if(dx*dx+dy*dy<=k*k)c.drawImage(S.ln,dx,dy);
+  c.globalAlpha=1;draw();
+}
+let raf=0;const rebuild=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(build)};
+['fa','li','th','tk','co'].forEach(i=>$(i).addEventListener('input',rebuild));
+$('gr').onchange=draw;
+
+$('img').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const im=new Image();
+  im.onload=()=>{
+    const k=Math.min(1,1400/Math.max(im.width,im.height)),w=Math.round(im.width*k),h=Math.round(im.height*k);
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const cx=c.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.drawImage(im,0,0,w,h);
+    const p=cx.getImageData(0,0,w,h).data,g=new Float32Array(w*h),bl=new Float32Array(w*h),m=new Float32Array(w*h);
+    for(let i=0;i<w*h;i++)g[i]=.299*p[i*4]+.587*p[i*4+1]+.114*p[i*4+2];
+    for(let y=1;y<h-1;y++)for(let xx=1;xx<w-1;xx++){const i=y*w+xx;
+      bl[i]=(g[i-w-1]+g[i-w]+g[i-w+1]+g[i-1]+g[i]+g[i+1]+g[i+w-1]+g[i+w]+g[i+w+1])/9}
+    let mx=1e-6;
+    for(let y=1;y<h-1;y++)for(let xx=1;xx<w-1;xx++){const i=y*w+xx;
+      const gx=-bl[i-w-1]+bl[i-w+1]-2*bl[i-1]+2*bl[i+1]-bl[i+w-1]+bl[i+w+1];
+      const gy=-bl[i-w-1]-2*bl[i-w]-bl[i-w+1]+bl[i+w-1]+2*bl[i+w]+bl[i+w+1];
+      const v=Math.hypot(gx,gy);m[i]=v;if(v>mx)mx=v}
+    for(let i=0;i<w*h;i++)m[i]=Math.min(1,m[i]/(mx*.5));
+    S.tpl.width=S.ln.width=w;S.tpl.height=S.ln.height=h;
+    Object.assign(S,{sc0:c,w,h,mag:m});
+    build();fit();
+    hint.textContent='یه انگشت: جابه‌جایی. دو انگشت: بزرگ‌نمایی و چرخش. روشنایی صفحه رو زیاد کن.';
+    try{if(navigator.wakeLock)navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}
+  };
+  im.src=URL.createObjectURL(file);
+});
+
+const P=new Map();
+cv.addEventListener('pointerdown',e=>{P.set(e.pointerId,[e.clientX,e.clientY]);cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{
+  if(!P.has(e.pointerId)||S.lock||!S.sc0)return;
+  const o=[...P.values()];P.set(e.pointerId,[e.clientX,e.clientY]);const n=[...P.values()];
+  if(n.length===1){S.px+=n[0][0]-o[0][0];S.py+=n[0][1]-o[0][1]}
+  else{
+    const a=[o[1][0]-o[0][0],o[1][1]-o[0][1]],b=[n[1][0]-n[0][0],n[1][1]-n[0][1]],da=Math.hypot(a[0],a[1]);
+    if(da>0){S.sc*=Math.hypot(b[0],b[1])/da;S.rot+=Math.atan2(b[1],b[0])-Math.atan2(a[1],a[0])}
+    S.px+=(n[0][0]+n[1][0]-o[0][0]-o[1][0])/2;S.py+=(n[0][1]+n[1][1]-o[0][1]-o[1][1])/2;
+  }
+  draw();
+});
+['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,e=>P.delete(e.pointerId)));
+cv.addEventListener('wheel',e=>{if(S.lock)return;e.preventDefault();S.sc*=Math.exp(-e.deltaY*.001);draw()},{passive:false});
+
+$('ro').onclick=()=>{S.rot+=Math.PI/2;draw()};
+$('fit').onclick=fit;
+$('lk').onclick=()=>{S.lock=S.lock?0:1;$('lk').textContent=S.lock?'باز کردن قفل':'قفل'};
+$('fs').onclick=async()=>{try{document.fullscreenElement?await document.exitFullscreen():await $('stage').requestFullscreen()}
+  catch(_){hint.textContent='تمام‌صفحه توی این پنجره ممکن نیست.'}};
+$('hd').onclick=()=>{$('panel').hidden=true;$('show').style.display='block';setTimeout(draw,50)};
+$('show').onclick=()=>{$('panel').hidden=false;$('show').style.display='none';setTimeout(draw,50)};
+const vid=document.createElement('video');vid.muted=true;vid.playsInline=true;
+function stopLive(){S.live=0;if(vid.srcObject){vid.srcObject.getTracks().forEach(t=>t.stop());vid.srcObject=null}}
+function loop(){if(S.live){draw();requestAnimationFrame(loop)}}
+$('lv').onclick=async()=>{
+  try{
+    stopLive();
+    vid.srcObject=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}});
+    await vid.play();S.bg=vid;S.live=1;loop();
+    hint.textContent='دوربین روشنه. الگو رو با یه انگشت و دو انگشت روی کاغذ تنظیم کن.';
+  }catch(e){hint.textContent='دوربین زنده کار نکرد ('+(e&&e.name||'?')+'). اجازهٔ دوربین رو بده و مطمئن شو آدرس با https شروع میشه. یا «عکس گرفتن از کاغذ» رو بزن.'}
+};
+$('ph').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const im=new Image();
+  im.onload=()=>{
+    const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    stopLive();S.bg=c;draw();
+    hint.textContent='الگو رو با عکس کاغذ هم‌تراز کن تا ببینی کجاها فرق دارن.';
+  };
+  im.src=URL.createObjectURL(f);
+});
+$('nb').onclick=()=>{stopLive();S.bg=null;draw()};
+new ResizeObserver(draw).observe(cv);
+draw();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
